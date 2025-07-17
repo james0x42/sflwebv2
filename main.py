@@ -1,139 +1,115 @@
-import asyncio
-import http.server
 import os
-import shutil
+import asyncio
 import threading
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-import sass
-import markdown
 import websockets
+import http.server
+import shutil
 
-# --- Config ---
-CONTENT_DIR = Path("content")
-TEMPLATE_DIR = Path("templates")
-STATIC_DIR = Path("static")
-BUILD_DIR = Path("build")
+# Paths
+ROOT = Path(__file__).parent.resolve()
+CONTENT = ROOT / "content"
+BUILD = ROOT / "build"
 PORT = 8000
-RELOAD_PORT = 8765
+WS_PORT = 8765
 
-# --- Jinja ---
-env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
+# Jinja environment
+env = Environment(loader=FileSystemLoader(str(CONTENT)))
 
-def build_site():
-    print("🛠 Rebuilding site...")
-    if BUILD_DIR.exists():
-        shutil.rmtree(BUILD_DIR)
-    BUILD_DIR.mkdir(parents=True)
-
-    if STATIC_DIR.exists():
-        shutil.copytree(STATIC_DIR, BUILD_DIR / "static")
-
-    for path in CONTENT_DIR.rglob("*"):
-        rel_path = path.relative_to(CONTENT_DIR)
-        output_path = BUILD_DIR / rel_path
-
-        if path.suffix == ".md":
-            with open(path, "r", encoding="utf-8") as f:
-                html = markdown.markdown(f.read())
-            rendered = env.get_template("base.html").render(content=html)
-            output_path = output_path.with_suffix(".html")
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(rendered + LIVE_RELOAD_SCRIPT, encoding="utf-8")
-
-        elif path.suffix == ".html":
-            template = env.get_template(str(rel_path))
-            rendered = template.render()
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(rendered + LIVE_RELOAD_SCRIPT, encoding="utf-8")
-
-        elif path.suffix == ".scss":
-            css = sass.compile(filename=str(path))
-            output_path = output_path.with_suffix(".css")
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(css, encoding="utf-8")
-
-        elif path.is_file():
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(path, output_path)
-
-    print("✅ Site built.")
-
-# --- Live Reload Script ---
-LIVE_RELOAD_SCRIPT = """
+# Live reload script
+RELOAD_SCRIPT = """
 <script>
   const ws = new WebSocket('ws://localhost:8765');
-  ws.onmessage = (event) => {
-    if (event.data === 'reload') {
-      console.log("🔁 Reloading...");
-      location.reload();
-    }
-  };
+  ws.onmessage = (e) => { if (e.data === 'reload') location.reload(); };
 </script>
 """
 
-# --- WebSocket Server for Reload ---
+# WebSocket clients
 clients = set()
 
-async def reload_server():
-    async def handler(websocket, path):
-        clients.add(websocket)
-        try:
-            await websocket.wait_closed()
-        finally:
-            clients.remove(websocket)
+# Correct websocket handler (2 arguments required)
+async def websocket_handler(websocket, path):
+    clients.add(websocket)
+    try:
+        await websocket.wait_closed()
+    finally:
+        clients.remove(websocket)
 
-    async with websockets.serve(handler, "localhost", RELOAD_PORT):
-        await asyncio.Future()  # run forever
+# Notify clients to reload
+async def broadcast_reload():
+    if clients:
+        await asyncio.wait([client.send("reload") for client in clients])
 
-def trigger_reload():
-    print("🔁 Triggering reload...")
-    asyncio.run(send_reload())
+def trigger_reload(loop):
+    asyncio.run_coroutine_threadsafe(broadcast_reload(), loop)
 
-async def send_reload():
-    to_remove = set()
-    for ws in clients:
-        try:
-            await ws.send("reload")
-        except:
-            to_remove.add(ws)
-    clients.difference_update(to_remove)
+# Build site (including CSS copy)
+def build_site():
+    print("🔧 Building site...")
+    BUILD.mkdir(exist_ok=True)
 
-# --- File Watcher ---
+    try:
+        # Render index.html
+        template = env.get_template("index.html")
+        rendered = template.render()
+        (BUILD / "index.html").write_text(rendered + RELOAD_SCRIPT, encoding="utf-8")
+
+        # Copy styles.css if exists
+        css_src = CONTENT / "styles.css"
+        if css_src.exists():
+            shutil.copy2(css_src, BUILD / "styles.css")
+            print("🎨 Copied styles.css")
+
+        print("✅ Site built.")
+    except Exception as e:
+        print("❌ Build error:", e)
+
+# File watcher
 class ChangeHandler(FileSystemEventHandler):
+    def __init__(self, loop):
+        self.loop = loop
+
     def on_any_event(self, event):
         if not event.is_directory:
             build_site()
-            asyncio.run(send_reload())
+            trigger_reload(self.loop)
 
-def watch_files():
-    build_site()
+def start_watcher(loop):
+    handler = ChangeHandler(loop)
     observer = Observer()
-    observer.schedule(ChangeHandler(), str(CONTENT_DIR), recursive=True)
+    observer.schedule(handler, str(CONTENT), recursive=True)
     observer.start()
-    print("👀 Watching for changes...")
+    print(f"👀 Watching {CONTENT}")
     try:
-        while True:
-            pass
+        observer.join()
     except KeyboardInterrupt:
         observer.stop()
-    observer.join()
+        observer.join()
 
-# --- HTTP Server ---
-def start_http_server():
-    os.chdir(BUILD_DIR)
-    handler = http.server.SimpleHTTPRequestHandler
-    httpd = http.server.ThreadingHTTPServer(("localhost", PORT), handler)
+# HTTP Server
+def start_http():
+    BUILD.mkdir(exist_ok=True)
+    os.chdir(str(BUILD))
+    server = http.server.ThreadingHTTPServer(("localhost", PORT), http.server.SimpleHTTPRequestHandler)
     print(f"🌍 Serving at http://localhost:{PORT}")
-    httpd.serve_forever()
+    server.serve_forever()
 
-# --- Main ---
-def main():
-    threading.Thread(target=start_http_server, daemon=True).start()
-    threading.Thread(target=watch_files, daemon=True).start()
-    asyncio.run(reload_server())
+# Main asyncio function
+async def main():
+    build_site()
+    loop = asyncio.get_running_loop()
+
+    # Start threads for HTTP server and watcher
+    threading.Thread(target=start_http, daemon=True).start()
+    threading.Thread(target=start_watcher, args=(loop,), daemon=True).start()
+
+    # Correct WebSocket server setup
+    print(f"🔌 WebSocket server on ws://localhost:{WS_PORT}")
+    async with websockets.serve(websocket_handler, "localhost", WS_PORT):
+        await asyncio.Future()  # Run indefinitely
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

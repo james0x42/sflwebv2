@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>WebSocket Test</title>
+</head>
+<body>
+  <h1>WebSocket Test Page</h1>
+  <p>Open the browser console to see connection messages.</p>
+  <script>
+    const ws = new WebSocket("ws://localhost:8765/test");
+    ws.onopen = () => console.log("✅ WebSocket connected");
+    ws.onmessage = (e) => console.log("📨 Message:", e.data);
+    ws.onerror = (e) => console.error("❌ WebSocket error", e);
+  </script>
+</body>
+</html>
