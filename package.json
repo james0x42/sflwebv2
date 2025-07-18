@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@picocss/pico": "^2.1.1",
+    "css": "^3.0.0",
+    "pico": "^0.1.17"
+  },
+  "devDependencies": {
+    "sass": "^1.89.2"
+  }
+}

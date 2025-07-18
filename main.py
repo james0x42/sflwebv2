@@ -1,115 +1,132 @@
-import os
 import asyncio
+import os
 import threading
+import http.server
+import socketserver
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
+import sass
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import websockets
-import http.server
-import shutil
+import subprocess
+# --- Absolute paths ---
+ROOT_DIR = Path(__file__).parent.resolve()
+CONTENT_DIR = ROOT_DIR / "content"
+BUILD_DIR = ROOT_DIR / "build"
+SCSS_FILE = CONTENT_DIR / "styles.scss"
+CSS_FILE = BUILD_DIR / "styles.css"
+INDEX_TEMPLATE = CONTENT_DIR / "index.html"
+OUTPUT_HTML = BUILD_DIR / "index.html"
 
-# Paths
-ROOT = Path(__file__).parent.resolve()
-CONTENT = ROOT / "content"
-BUILD = ROOT / "build"
-PORT = 8000
+# --- Server Ports ---
+HTTP_PORT = 8000
 WS_PORT = 8765
 
-# Jinja environment
-env = Environment(loader=FileSystemLoader(str(CONTENT)))
-
-# Live reload script
-RELOAD_SCRIPT = """
-<script>
-  const ws = new WebSocket('ws://localhost:8765');
-  ws.onmessage = (e) => { if (e.data === 'reload') location.reload(); };
-</script>
-"""
-
-# WebSocket clients
+# --- WebSocket clients ---
 clients = set()
 
-# Correct websocket handler (2 arguments required)
-async def websocket_handler(websocket, path):
+# -----------------------
+# SCSS Compilation
+# -----------------------
+
+def compile_scss():
+    if SCSS_FILE.exists():
+        try:
+            subprocess.run([
+                "npx", "sass",
+                "--no-source-map",
+                str(SCSS_FILE),
+                str(CSS_FILE)
+            ], check=True)
+            print(f"✅ Compiled SCSS (Dart Sass) → {CSS_FILE}")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ SCSS compilation failed: {e}")
+    else:
+        print(f"⚠️  No SCSS file found at {SCSS_FILE}")
+# -----------------------
+# Jinja Rendering
+# -----------------------
+def render_site():
+    env = Environment(loader=FileSystemLoader(str(CONTENT_DIR)))
+    try:
+        template = env.get_template(INDEX_TEMPLATE.name)
+        html = template.render()
+        OUTPUT_HTML.write_text(html, encoding="utf-8")
+        print(f"✅ Rendered HTML → {OUTPUT_HTML}")
+    except Exception as e:
+        print(f"❌ Jinja render error: {e}")
+
+# -----------------------
+# WebSocket Live Reload
+# -----------------------
+async def ws_handler(websocket, path):
     clients.add(websocket)
+    print(f"🔌 WebSocket connected on path: {path}")
     try:
         await websocket.wait_closed()
     finally:
         clients.remove(websocket)
 
-# Notify clients to reload
-async def broadcast_reload():
-    if clients:
-        await asyncio.wait([client.send("reload") for client in clients])
+async def start_websocket_server():
+    print(f"📡 Starting WebSocket server on ws://localhost:{WS_PORT}")
+    async with websockets.serve(ws_handler, "localhost", WS_PORT):
+        await asyncio.Future()  # Run forever
 
-def trigger_reload(loop):
-    asyncio.run_coroutine_threadsafe(broadcast_reload(), loop)
+def broadcast_reload():
+    for ws in list(clients):
+        try:
+            asyncio.run_coroutine_threadsafe(ws.send("reload"), asyncio.get_event_loop())
+        except Exception:
+            pass
 
-# Build site (including CSS copy)
-def build_site():
-    print("🔧 Building site...")
-    BUILD.mkdir(exist_ok=True)
+# -----------------------
+# HTTP Server
+# -----------------------
+def start_http():
+    os.chdir(str(BUILD_DIR))
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", HTTP_PORT), handler) as httpd:
+        print(f"🌐 Serving site at http://localhost:{HTTP_PORT}")
+        httpd.serve_forever()
 
-    try:
-        # Render index.html
-        template = env.get_template("index.html")
-        rendered = template.render()
-        (BUILD / "index.html").write_text(rendered + RELOAD_SCRIPT, encoding="utf-8")
-
-        # Copy styles.css if exists
-        css_src = CONTENT / "styles.css"
-        if css_src.exists():
-            shutil.copy2(css_src, BUILD / "styles.css")
-            print("🎨 Copied styles.css")
-
-        print("✅ Site built.")
-    except Exception as e:
-        print("❌ Build error:", e)
-
-# File watcher
+# -----------------------
+# Watchdog File Watcher
+# -----------------------
 class ChangeHandler(FileSystemEventHandler):
-    def __init__(self, loop):
-        self.loop = loop
+    def on_modified(self, event):
+        if event.is_directory:
+            return
+        print(f"🔄 Detected change: {event.src_path}")
+        compile_scss()
+        render_site()
+        broadcast_reload()
 
-    def on_any_event(self, event):
-        if not event.is_directory:
-            build_site()
-            trigger_reload(self.loop)
+# -----------------------
+# Main Function
+# -----------------------
+def main():
+    # Initial build
+    BUILD_DIR.mkdir(parents=True, exist_ok=True)
+    compile_scss()
+    render_site()
 
-def start_watcher(loop):
-    handler = ChangeHandler(loop)
+    # Start servers
+    threading.Thread(target=start_http, daemon=True).start()
+    threading.Thread(target=lambda: asyncio.run(start_websocket_server()), daemon=True).start()
+
+    # Start file watcher
     observer = Observer()
-    observer.schedule(handler, str(CONTENT), recursive=True)
+    observer.schedule(ChangeHandler(), str(CONTENT_DIR), recursive=True)
     observer.start()
-    print(f"👀 Watching {CONTENT}")
+    print(f"👀 Watching for changes in {CONTENT_DIR}")
+
     try:
-        observer.join()
+        while True:
+            pass
     except KeyboardInterrupt:
         observer.stop()
-        observer.join()
-
-# HTTP Server
-def start_http():
-    BUILD.mkdir(exist_ok=True)
-    os.chdir(str(BUILD))
-    server = http.server.ThreadingHTTPServer(("localhost", PORT), http.server.SimpleHTTPRequestHandler)
-    print(f"🌍 Serving at http://localhost:{PORT}")
-    server.serve_forever()
-
-# Main asyncio function
-async def main():
-    build_site()
-    loop = asyncio.get_running_loop()
-
-    # Start threads for HTTP server and watcher
-    threading.Thread(target=start_http, daemon=True).start()
-    threading.Thread(target=start_watcher, args=(loop,), daemon=True).start()
-
-    # Correct WebSocket server setup
-    print(f"🔌 WebSocket server on ws://localhost:{WS_PORT}")
-    async with websockets.serve(websocket_handler, "localhost", WS_PORT):
-        await asyncio.Future()  # Run indefinitely
+    observer.join()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

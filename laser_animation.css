@@ -1,0 +1,96 @@
+.laser-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.laser-beam {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--color-blue-400), transparent);
+  animation: laser-pulse 3s ease-in-out infinite;
+}
+
+.laser-beam-1 {
+  top: 25%;
+  left: 0;
+  transform: rotate(-12deg);
+}
+
+.laser-beam-2 {
+  top: 50%;
+  right: 0;
+  background: linear-gradient(to right, transparent, var(--color-gray-300), transparent);
+  transform: rotate(12deg);
+  animation-delay: 1s;
+}
+
+.laser-beam-3 {
+  bottom: 25%;
+  left: 0;
+  background: linear-gradient(to right, transparent, var(--color-blue-300), transparent);
+  transform: rotate(-6deg);
+  animation-delay: 2s;
+}
+
+.geometric-element {
+  position: absolute;
+  border: 2px solid;
+  animation: float 6s ease-in-out infinite;
+}
+
+.geo-1 {
+  top: 5rem;
+  right: 5rem;
+  width: 2rem;
+  height: 2rem;
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: rotate(45deg);
+}
+
+.geo-2 {
+  bottom: 8rem;
+  left: 4rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-color: rgba(209, 213, 219, 0.5);
+  transform: rotate(12deg);
+  animation-delay: 3s;
+}
+
+.geo-3 {
+  top: 33.333333%;
+  right: 25%;
+  width: 1rem;
+  height: 1rem;
+  border-color: rgba(71, 85, 105, 0.5);
+  transform: rotate(45deg);
+  animation-delay: 4s;
+}
+
+.precision-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.05;
+}
+
+.grid-pattern {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  height: 100%;
+  width: 100%;
+}
+
+.grid-cell {
+  border-right: 1px solid rgba(59, 130, 246, 0.1);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+}
