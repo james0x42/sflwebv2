@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class = "dark">
+
 <head>
   <meta charset="UTF-8" />
-  <title>My Site</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LaserTech NZ - Precision Laser Solutions</title>
+  <meta name="description" content="New Zealand's premier supplier of precision laser systems and custom solutions">
   <link rel="stylesheet" href="styles.css" />
 
     <style>
@@ -32,11 +35,17 @@
   </style>
 </head>
 <body class="bg-black text-white dark:bg-black dark:text-white light:bg-white light:text-gray-900">
-  {% include "header.html" %}
-  {% block content %}{% endblock %}
-
   
+   <!-- Global wrapper -->
+  <div class="min-h-screen flex flex-col">
+
+  {% include "header.html" %}
+
+  <main class="flex-1 space-y-20"">
+  {% block content %}{% endblock %}
+  </main>
+  </div>
   <!-- Theme JS -->
-  <script src="/theme.js"></script>
+  <!-- <script src="/theme.js"></script> -->
 </body>
 </html>
