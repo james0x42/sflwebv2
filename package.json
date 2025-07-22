@@ -1,8 +1,12 @@
 {
   "dependencies": {
     "@picocss/pico": "^2.1.1",
+    "@tailwindcss/cli": "^4.1.11",
+    "autoprefixer": "^10.4.21",
     "css": "^3.0.0",
-    "pico": "^0.1.17"
+    "pico": "^0.1.17",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
     "sass": "^1.89.2"

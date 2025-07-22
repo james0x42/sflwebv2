@@ -1,0 +1,8 @@
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+@import "tailwindcss";
+/* Your custom overrides below */
+body {
+  @apply bg-gray-50;
+}

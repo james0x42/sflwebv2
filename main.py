@@ -26,6 +26,20 @@ WS_PORT = 8765
 # --- WebSocket clients ---
 clients = set()
 
+
+def build_tailwind():
+    # Compile Tailwind to build/styles.css
+    try:
+        subprocess.run([
+            "npx", "@tailwindcss/cli",
+            "-i", str(CONTENT_DIR / "styles.css"),    # input
+            "-o", str(BUILD_DIR / "styles.css"),      # output
+            # "--minify"
+        ], check=True)
+        print(f"✅ Tailwind CSS built → {BUILD_DIR / 'styles.css'}")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Tailwind build failed: {e}")
+
 # -----------------------
 # SCSS Compilation
 # -----------------------
@@ -98,7 +112,7 @@ class ChangeHandler(FileSystemEventHandler):
         if event.is_directory:
             return
         print(f"🔄 Detected change: {event.src_path}")
-        compile_scss()
+        build_tailwind()
         render_site()
         broadcast_reload()
 
@@ -108,7 +122,7 @@ class ChangeHandler(FileSystemEventHandler):
 def main():
     # Initial build
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
-    compile_scss()
+    build_tailwind()
     render_site()
 
     # Start servers

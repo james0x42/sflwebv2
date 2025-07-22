@@ -4,134 +4,205 @@
   <meta charset="UTF-8" />
   <title>My Site</title>
   <link rel="stylesheet" href="styles.css" />
+
+    <style>
+    .hero-bg {
+      background: linear-gradient(135deg, #000 0%, #0a0a0a 50%, #111 100%);
+    }
+    .hero-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(45deg, transparent 40%, rgba(59,130,246,.03) 50%, transparent 60%),
+        linear-gradient(-45deg, transparent 40%, rgba(255,255,255,.01) 50%, transparent 60%);
+      animation: laser-sweep 8s ease-in-out infinite;
+    }
+    .light .hero-bg {
+      background: linear-gradient(135deg, #fff 0%, #f8fafc 50%, #f1f5f9 100%);
+    }
+    .light .hero-bg::before {
+      background-image: 
+        linear-gradient(45deg, transparent 40%, rgba(59,130,246,.05) 50%, transparent 60%),
+        linear-gradient(-45deg, transparent 40%, rgba(0,0,0,.02) 50%, transparent 60%);
+    }
+    * {
+      transition: background-color .3s ease, color .3s ease, border-color .3s ease;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-black text-white dark:bg-black dark:text-white light:bg-white light:text-gray-900">
+  <header class="bg-black dark:bg-black light:bg-white border-b border-gray-800 dark:border-gray-800 light:border-gray-200 sticky top-0 z-50">
+  <div class="container mx-auto px-4 lg:px-6">
+    <nav class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="/" class="flex items-center gap-2 text-white dark:text-white light:text-gray-900">
+        <!-- <svg class="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <h1 class="text-xl font-extrabold">LaserTech NZ</h1> -->
+      </a>
+
+      <!-- Navigation Links -->
+      <ul class="hidden md:flex items-center gap-8">
+        <li><a href="#products" class="nav-link">Products</a></li>
+        <li><a href="#custom" class="nav-link">Custom Solutions</a></li>
+        <li><a href="#clients" class="nav-link">Clients</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+
+      <!-- Theme toggle + CTA -->
+      <div class="flex items-center gap-4">
+        <!-- Theme Switcher -->
+        <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
+          <svg id="sun-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <svg id="moon-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+        </button>
+
+        <!-- Call-to-action -->
+        <button class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+          Get Quote
+        </button>
+      </div>
+    </nav>
+  </div>
+</header>
   
-    <section id="products" className="section section-dark">
-          <div className="container">
-            <div className="section-header">
-              <h2>Our Core Produsdct Randge</h2>
-              <p>
-                Three flagship laser systems designed for precision, reliability, and performance across diverse
-                industrial and research applications.
-              </p>
-            </div>
+  <section class="hero-bg relative overflow-hidden py-20">
+  <div class="container mx-auto px-4 lg:px-6 grid lg:grid-cols-2 gap-10 items-center">
+    <!-- Left Column: Text -->
+    <div>
+      <h1 class="text-5xl font-extrabold leading-tight mb-4">
+        Precision Laser Solutions
+      </h1>
+      <p class="text-lg text-gray-300 dark:text-gray-300 light:text-gray-600 mb-6">
+        Industrial, research, and custom laser systems built for performance and reliability in New Zealand and beyond.
+      </p>
+      <div class="flex gap-4">
+        <a href="#products" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+          View Products
+        </a>
+        <a href="#contact" class="border border-gray-700 dark:border-gray-700 light:border-gray-300 
+          bg-gray-800 dark:bg-gray-800 light:bg-white hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-50 
+          text-white dark:text-white light:text-gray-900 px-6 py-3 rounded-lg font-medium transition-colors">
+          Get a Quote
+        </a>
+      </div>
+    </div>
 
-            <div className="grid-3">
-              <article className="product-card">
-                <header>
-                  <Image
-                    src="/placeholder.svg?height=200&width=400"
-                    alt="Industrial cutting laser system"
-                    width={400}
-                    height={200}
-                  />
-                </header>
-                <main>
-                  <h3>Industrial Cutting Lasers</h3>
-                  <p>
-                    High-power fiber and CO2 laser systems for precision cutting of metals, plastics, and composites.
-                  </p>
-                  <ul className="feature-list">
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      Power range: 1kW - 20kW
-                    </li>
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      Cutting thickness up to 50mm
-                    </li>
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      Advanced beam control
-                    </li>
-                  </ul>
-                </main>
-                <footer>
-                  <button role="button" className="w-full">
-                    Learn More
-                  </button>
-                </footer>
-              </article>
+    <!-- Right Column: Image -->
+    <div>
+      <img 
+        src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=700&h=500&fit=crop&crop=center"
+        alt="Precision laser equipment"
+        class="rounded-lg shadow-xl w-full max-w-lg mx-auto">
+    </div>
+  </div>
+</section>
+  <section id="products" class="py-20 bg-gray-950 dark:bg-gray-950 light:bg-gray-50">
+  <div class="container mx-auto px-4 lg:px-6">
+    <!-- Section Heading -->
+    <div class="text-center mb-12">
+      <h2 class="text-4xl lg:text-5xl font-bold mb-4">Our Core Products</h2>
+      <p class="text-lg text-gray-300 dark:text-gray-300 light:text-gray-600 max-w-2xl mx-auto">
+        Three flagship laser systems designed for precision, reliability, and performance across industry and research.
+      </p>
+    </div>
 
-              <article className="product-card">
-                <header>
-                  <Image
-                    src="/placeholder.svg?height=200&width=400"
-                    alt="Medical and scientific laser equipment"
-                    width={400}
-                    height={200}
-                  />
-                </header>
-                <main>
-                  <h3>Medical & Scientific Lasers</h3>
-                  <p>
-                    Precision laser systems for medical procedures, research applications, and laboratory
-                    instrumentation.
-                  </p>
-                  <ul className="feature-list">
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      UV, visible, and IR wavelengths
-                    </li>
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      Ultra-stable output
-                    </li>
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      Medical device compliance
-                    </li>
-                  </ul>
-                </main>
-                <footer>
-                  <button role="button" className="w-full">
-                    Learn More
-                  </button>
-                </footer>
-              </article>
+    <!-- Three Cards (Fixed Row) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Product 1 -->
+      <article class="flex flex-col bg-black dark:bg-black light:bg-white border border-gray-800 dark:border-gray-800 light:border-gray-200 
+        rounded-lg overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-transform">
+        <!-- Image -->
+        <img src="https://images.unsplash.com/photo-1565106430482-8f6e74349ca1?w=400&h=200&fit=crop&crop=center" 
+             alt="Industrial Cutting Laser" class="w-full h-48 object-cover">
+        <!-- Content -->
+        <div class="flex flex-col flex-1 p-6">
+          <h3 class="text-xl font-semibold mb-2">Industrial Cutting Lasers</h3>
+          <p class="text-gray-400 dark:text-gray-400 light:text-gray-600 mb-4 text-sm">
+            High-power fiber and CO₂ systems for precision cutting of metals, plastics, and composites.
+          </p>
+          <ul class="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600 space-y-1 mb-6">
+            <li>• 1kW – 20kW power range</li>
+            <li>• Cuts up to 50mm thickness</li>
+            <li>• Advanced beam control</li>
+          </ul>
+          <a href="#contact" class="mt-auto block text-center bg-gray-800 dark:bg-gray-800 light:bg-gray-100 
+            hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-200 
+            text-white dark:text-white light:text-gray-900 py-2 rounded-lg transition-colors">
+            Learn More
+          </a>
+        </div>
+      </article>
 
-              <article className="product-card">
-                <header>
-                  <Image
-                    src="/placeholder.svg?height=200&width=400"
-                    alt="Laser marking and engraving system"
-                    width={400}
-                    height={200}
-                  />
-                </header>
-                <main>
-                  <h3>Marking & Engraving Systems</h3>
-                  <p>
-                    Compact, high-speed laser marking solutions for product identification, traceability, and decorative
-                    applications.
-                  </p>
-                  <ul className="feature-list">
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      Fiber, UV, and green lasers
-                    </li>
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      High-speed galvo scanning
-                    </li>
-                    <li>
-                      <CheckCircle className="check-icon" />
-                      Integrated software suite
-                    </li>
-                  </ul>
-                </main>
-                <footer>
-                  <button role="button" className="w-full">
-                    Learn More
-                  </button>
-                </footer>
-              </article>
-            </div>
-          </div>
-        </section>
+      <!-- Product 2 -->
+      <article class="flex flex-col bg-black dark:bg-black light:bg-white border border-gray-800 dark:border-gray-800 light:border-gray-200 
+        rounded-lg overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-transform">
+        <!-- Image -->
+        <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop&crop=center" 
+             alt="Medical & Scientific Laser" class="w-full h-48 object-cover">
+        <!-- Content -->
+        <div class="flex flex-col flex-1 p-6">
+          <h3 class="text-xl font-semibold mb-2">Medical & Scientific Lasers</h3>
+          <p class="text-gray-400 dark:text-gray-400 light:text-gray-600 mb-4 text-sm">
+            Precision systems for medical procedures, research labs, and laboratory instrumentation.
+          </p>
+          <ul class="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600 space-y-1 mb-6">
+            <li>• UV, visible, and IR wavelengths</li>
+            <li>• Ultra-stable output</li>
+            <li>• Medical compliance</li>
+          </ul>
+          <a href="#contact" class="mt-auto block text-center bg-gray-800 dark:bg-gray-800 light:bg-gray-100 
+            hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-200 
+            text-white dark:text-white light:text-gray-900 py-2 rounded-lg transition-colors">
+            Learn More
+          </a>
+        </div>
+      </article>
+
+      <!-- Product 3 -->
+      <article class="flex flex-col bg-black dark:bg-black light:bg-white border border-gray-800 dark:border-gray-800 light:border-gray-200 
+        rounded-lg overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-transform">
+        <!-- Image -->
+        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=200&fit=crop&crop=center" 
+             alt="Marking & Engraving Laser" class="w-full h-48 object-cover">
+        <!-- Content -->
+        <div class="flex flex-col flex-1 p-6">
+          <h3 class="text-xl font-semibold mb-2">Marking & Engraving Systems</h3>
+          <p class="text-gray-400 dark:text-gray-400 light:text-gray-600 mb-4 text-sm">
+            Compact, high-speed solutions for identification, traceability, and decorative applications.
+          </p>
+          <ul class="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600 space-y-1 mb-6">
+            <li>• Fiber, UV, and green lasers</li>
+            <li>• High-speed galvo scanning</li>
+            <li>• Integrated software suite</li>
+          </ul>
+          <a href="#contact" class="mt-auto block text-center bg-gray-800 dark:bg-gray-800 light:bg-gray-100 
+            hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-200 
+            text-white dark:text-white light:text-gray-900 py-2 rounded-lg transition-colors">
+            Learn More
+          </a>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
   <h1>Hello World from Jinja</h1>
   <p>This is the content block.</p>
 
+
+  
+  <!-- Theme JS -->
+  <script src="/theme.js"></script>
 </body>
 </html>
